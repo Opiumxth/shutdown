@@ -84,7 +84,7 @@ export function usePortalMatch(matchId: string) {
       const damage = calculateDamage({
         attackerElapsedMs: turn.attackerResult.timestamp - turn.anchorTime,
         defenderElapsedMs: turn.defenderResult.timestamp - turn.anchorTime,
-        defenderResponded: true,
+        defenderResponded: turn.defenderResult.success,
       });
 
       if (turn.myRole === "attacker") {
