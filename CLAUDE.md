@@ -124,3 +124,9 @@ xp.css para ventanas/botones/barra de título. Framer Motion para los popups
 de error y la desaturación progresiva según % de salud. Fondo tipo wallpaper
 "Bliss" desaturado. Estado final: BSOD real para quien pierde, con un código
 de error personalizado en pantalla (ej. ERR_RIVAL_TOO_GOOD).
+
+## Nota — ephemeral en @portalsdk/core@0.1.5
+Los mensajes ephemeral no llegan al otro cliente en la versión instalada
+(confirmado leyendo el SDK y probado en vivo). defense/result usan sends
+persistentes en su lugar — funciona igual, ya validado. Los cursores en
+vivo deben usar setMetadata (throttleado ~250ms), no ephemeral send.

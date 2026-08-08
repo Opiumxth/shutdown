@@ -1,24 +1,8 @@
 "use client";
 
-import { use, useState } from "react";
+import { use } from "react";
 import { usePortalMatch } from "@/hooks/usePortalMatch";
 import { ErrorPopup } from "@/components/minigame/ErrorPopup";
-import type { PuzzleData, PuzzleResult } from "@/components/minigame/types";
-
-type PuzzleApiResponse = {
-  attack: PuzzleData & { puzzleId: string };
-  defense: PuzzleData & { puzzleId: string };
-};
-
-async function fetchMockPuzzle(): Promise<PuzzleData> {
-  const response = await fetch("/api/puzzle", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ theme: "Software" }),
-  });
-  const data: PuzzleApiResponse = await response.json();
-  return data.attack;
-}
 
 export default function MatchPage({
   params,
@@ -26,19 +10,17 @@ export default function MatchPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { status, participantCount } = usePortalMatch(id);
-  const [mockPuzzle, setMockPuzzle] = useState<PuzzleData | null>(null);
-  const [lastResult, setLastResult] = useState<PuzzleResult | null>(null);
-
-  async function handleTestPuzzle() {
-    setLastResult(null);
-    setMockPuzzle(await fetchMockPuzzle());
-  }
-
-  function handleResult(result: PuzzleResult) {
-    setLastResult(result);
-    setMockPuzzle(null);
-  }
+  const {
+    status,
+    participantCount,
+    myHealth,
+    opponentHealth,
+    activeAttackPuzzle,
+    activeDefensePuzzle,
+    attack,
+    resolveAttack,
+    resolveDefense,
+  } = usePortalMatch(id);
 
   return (
     <main className="flex flex-1 items-center justify-center p-8">
@@ -52,24 +34,26 @@ export default function MatchPage({
             <p>
               {participantCount < 2 ? "Esperando rival..." : "Rival conectado"}
             </p>
-            <button type="button" onClick={handleTestPuzzle}>
-              Probar minijuego (mock)
+            <p>myHealth: {myHealth}</p>
+            <p>opponentHealth: {opponentHealth}</p>
+            <button type="button" onClick={() => attack("Software")}>
+              Atacar
             </button>
-            {lastResult && (
-              <p>
-                Último resultado:{" "}
-                {lastResult.success ? "Resuelto" : "Fallado / timeout"} en{" "}
-                {lastResult.elapsed}ms
-              </p>
-            )}
           </div>
         </div>
 
-        {mockPuzzle && (
+        {activeAttackPuzzle && (
           <ErrorPopup
-            key={mockPuzzle.deadline}
-            {...mockPuzzle}
-            onResult={handleResult}
+            key={activeAttackPuzzle.deadline}
+            {...activeAttackPuzzle}
+            onResult={resolveAttack}
+          />
+        )}
+        {activeDefensePuzzle && (
+          <ErrorPopup
+            key={activeDefensePuzzle.deadline}
+            {...activeDefensePuzzle}
+            onResult={resolveDefense}
           />
         )}
       </div>
