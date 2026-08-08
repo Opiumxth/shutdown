@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useChannel } from "@portalsdk/react";
 import { calculateDamage } from "@/lib/damage";
 import { MAX_HP } from "@/lib/constants";
@@ -96,7 +96,7 @@ export function usePortalMatch(matchId: string) {
     [],
   );
 
-  const { status, presence, send } = useChannel<MatchMessage>({
+  const { status, presence, send, setMetadata, me } = useChannel<MatchMessage>({
     channelId: `match:${matchId}`,
     onMessage: (msg) => {
       if (msg.type === "defense") {
@@ -118,6 +118,35 @@ export function usePortalMatch(matchId: string) {
       }
     },
   });
+
+  useEffect(() => {
+    let last = 0;
+    const sendPosition = (x: number, y: number) => {
+      const now = performance.now();
+      if (now - last < 50) return;
+      last = now;
+      setMetadata({ mouseX: x, mouseY: y });
+    };
+
+    const onMove = (e: MouseEvent) => sendPosition(e.clientX, e.clientY);
+
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [setMetadata]);
+
+  const rivalMouse = (() => {
+    if (presence?.kind !== "detailed") return null;
+    const rival = presence.participants.find((p) => p.id !== me?.id);
+    const meta = rival?.metadata;
+    if (
+      !meta ||
+      typeof meta.mouseX !== "number" ||
+      typeof meta.mouseY !== "number"
+    ) {
+      return null;
+    }
+    return { x: meta.mouseX, y: meta.mouseY };
+  })();
 
   const participantCount = presence?.kind === "detailed" ? presence.count : 0;
 
@@ -200,5 +229,6 @@ export function usePortalMatch(matchId: string) {
     attack,
     resolveAttack,
     resolveDefense,
+    rivalMouse,
   };
 }
