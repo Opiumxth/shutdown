@@ -3,6 +3,7 @@
 import { use } from "react";
 import { usePortalMatch } from "@/hooks/usePortalMatch";
 import { ErrorPopup } from "@/components/minigame/ErrorPopup";
+import { MAX_HP } from "@/lib/constants";
 
 export default function MatchPage({
   params,
@@ -22,9 +23,16 @@ export default function MatchPage({
     resolveDefense,
   } = usePortalMatch(id);
 
+  const corruption = Math.max(0, Math.min(1, myHealth / MAX_HP));
+
   return (
     <main className="flex flex-1 items-center justify-center p-8">
-      <div style={{ position: "relative", width: "100%", maxWidth: 640, minHeight: 420 }}>
+      <div
+        className="desktop"
+        style={{
+          filter: `saturate(${corruption}) grayscale(${1 - corruption})`,
+        }}
+      >
         <div className="window" style={{ width: 320 }}>
           <div className="title-bar">
             <div className="title-bar-text">Partida {id}</div>
@@ -42,21 +50,22 @@ export default function MatchPage({
           </div>
         </div>
 
-        {activeAttackPuzzle && (
-          <ErrorPopup
-            key={activeAttackPuzzle.deadline}
-            {...activeAttackPuzzle}
-            onResult={resolveAttack}
-          />
-        )}
-        {activeDefensePuzzle && (
-          <ErrorPopup
-            key={activeDefensePuzzle.deadline}
-            {...activeDefensePuzzle}
-            onResult={resolveDefense}
-          />
-        )}
       </div>
+
+      {activeAttackPuzzle && (
+        <ErrorPopup
+          key={activeAttackPuzzle.deadline}
+          {...activeAttackPuzzle}
+          onResult={resolveAttack}
+        />
+      )}
+      {activeDefensePuzzle && (
+        <ErrorPopup
+          key={activeDefensePuzzle.deadline}
+          {...activeDefensePuzzle}
+          onResult={resolveDefense}
+        />
+      )}
     </main>
   );
 }

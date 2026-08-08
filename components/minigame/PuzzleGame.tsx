@@ -55,6 +55,7 @@ export function PuzzleGame({
   onResult,
 }: PuzzleGameProps) {
   const [items, setItems] = useState(scrambledItems);
+  const itemsRef = useRef(items);
   const startTimeRef = useRef(0);
   const resolvedRef = useRef(false);
   const [remaining, setRemaining] = useState(PUZZLE_DEADLINE_MS);
@@ -85,19 +86,23 @@ export function PuzzleGame({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deadline]);
 
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    setItems((current) => {
-      const oldIndex = current.indexOf(String(active.id));
-      const newIndex = current.indexOf(String(over.id));
-      const next = arrayMove(current, oldIndex, newIndex);
-      if (next.every((item, i) => item === correctOrder[i])) {
-        finish(true);
-      }
-      return next;
-    });
+    const current = itemsRef.current;
+    const oldIndex = current.indexOf(String(active.id));
+    const newIndex = current.indexOf(String(over.id));
+    const next = arrayMove(current, oldIndex, newIndex);
+    setItems(next);
+
+    if (next.every((item, i) => item === correctOrder[i])) {
+      queueMicrotask(() => finish(true));
+    }
   }
 
   return (
