@@ -3,8 +3,13 @@
 import { use, useEffect, useState } from "react";
 import { usePortalMatch } from "@/hooks/usePortalMatch";
 import { ErrorPopup } from "@/components/minigame/ErrorPopup";
+import { XPWindow } from "@/components/xp-ui/XPWindow";
+import { NetworkMap } from "@/components/xp-ui/NetworkMap";
+import { Taskbar } from "@/components/xp-ui/Taskbar";
+import { DecorativeXPError } from "@/components/xp-ui/DecorativeXPError";
 import { BSOD } from "@/components/xp-ui/BSOD";
 import { VictoryWindow } from "@/components/xp-ui/VictoryWindow";
+import type { PuzzleData, PuzzleResult } from "@/components/minigame/types";
 import { ATTACK_COOLDOWN_MS, MAX_HP } from "@/lib/constants";
 
 export default function MatchPage({
@@ -26,6 +31,7 @@ export default function MatchPage({
   } = usePortalMatch(id);
 
   const [cooldownLeft, setCooldownLeft] = useState(0);
+  const [flashKey, setFlashKey] = useState(0);
   const onCooldown = cooldownLeft > 0;
 
   useEffect(() => {
@@ -39,7 +45,30 @@ export default function MatchPage({
   function handleAttack() {
     if (onCooldown) return;
     setCooldownLeft(ATTACK_COOLDOWN_MS);
+    setFlashKey((key) => key + 1);
     void attack("Software");
+  }
+
+  const [rivalErrors, setRivalErrors] = useState<PuzzleData[]>([]);
+
+  function handleResolveAttack(result: PuzzleResult) {
+    if (result.success && activeAttackPuzzle) {
+      const puzzle = activeAttackPuzzle;
+      setRivalErrors((prev) =>
+        prev.some((p) => p.deadline === puzzle.deadline)
+          ? prev
+          : [...prev, puzzle].slice(-5),
+      );
+    }
+    void resolveAttack(result);
+  }
+
+  function positionFromSeed(seed: number) {
+    const a = (seed * 1103515245 + 12345) % 2147483648;
+    const b = (a * 1103515245 + 12345) % 2147483648;
+    const top = a % 2 === 0 ? 6 + (a % 20) : 72 + (a % 18);
+    const left = b % 2 === 0 ? 6 + (b % 20) : 72 + (b % 18);
+    return { top: `${top}%`, left: `${left}%` };
   }
 
   const iLost = myHealth <= 0;
@@ -48,8 +77,8 @@ export default function MatchPage({
   const rivalCorruption = Math.max(0, Math.min(1, opponentHealth / MAX_HP));
 
   return (
-    <main className="relative flex h-dvh overflow-hidden p-4">
-      <div className="grid w-full grid-cols-2 gap-3">
+    <main className="relative flex h-dvh flex-col overflow-hidden">
+      <div className="grid w-full flex-1 grid-cols-2 gap-3 p-4">
         <section className="relative min-h-0 overflow-hidden">
           {iLost ? (
             <BSOD stop="0x0000007B" code="ERR_RIVAL_TOO_GOOD" />
@@ -63,14 +92,37 @@ export default function MatchPage({
                   filter: `saturate(${myCorruption}) grayscale(${1 - myCorruption})`,
                 }}
               >
-                <div className="window fill">
-                  <div className="title-bar">
-                    <div className="title-bar-text">MI SISTEMA — {id}</div>
-                  </div>
-                  <div className="window-body network-map">
-                    <div className="network-ring ring-1" />
-                    <div className="network-ring ring-2" />
-                    <div className="network-ring ring-3" />
+                <XPWindow fill title={`MI SISTEMA — ${id}`}>
+                  <NetworkMap
+                    node={
+                      <div className="attack-node">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src="/assets/icons/central-node.png"
+                          alt="Atacar"
+                          className={`w-16 h-16 object-contain [image-rendering:pixelated] ${
+                            onCooldown
+                              ? "opacity-40 cursor-not-allowed"
+                              : "cursor-pointer"
+                          }`}
+                          onClick={handleAttack}
+                        />
+                        <div className="h-1 w-24 overflow-hidden bg-zinc-700">
+                          <div
+                            className="h-full bg-green-500"
+                            style={{
+                              width: `${(cooldownLeft / ATTACK_COOLDOWN_MS) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        {onCooldown && (
+                          <span className="hud" style={{ fontSize: 10 }}>
+                            {Math.ceil(cooldownLeft / 1000)}s
+                          </span>
+                        )}
+                      </div>
+                    }
+                  >
                     <p className="hud">Estado: {status}</p>
                     <p className="hud">
                       {participantCount < 2
@@ -78,34 +130,8 @@ export default function MatchPage({
                         : "Rival conectado"}
                     </p>
                     <p className="hud">HP: {myHealth.toFixed(2)}</p>
-                    <div className="attack-node">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/assets/icons/central-node.png"
-                        alt="Atacar"
-                        className={`w-16 h-16 object-contain [image-rendering:pixelated] ${
-                          onCooldown
-                            ? "opacity-40 cursor-not-allowed"
-                            : "cursor-pointer"
-                        }`}
-                        onClick={handleAttack}
-                      />
-                      <div className="h-1 w-24 overflow-hidden bg-zinc-700">
-                        <div
-                          className="h-full bg-green-500"
-                          style={{
-                            width: `${(cooldownLeft / ATTACK_COOLDOWN_MS) * 100}%`,
-                          }}
-                        />
-                      </div>
-                      {onCooldown && (
-                        <span className="hud" style={{ fontSize: 10 }}>
-                          {Math.ceil(cooldownLeft / 1000)}s
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                  </NetworkMap>
+                </XPWindow>
               </div>
 
               {activeDefensePuzzle && (
@@ -120,7 +146,7 @@ export default function MatchPage({
                   key={activeAttackPuzzle.deadline}
                   defaultExpanded
                   {...activeAttackPuzzle}
-                  onResult={resolveAttack}
+                  onResult={handleResolveAttack}
                 />
               )}
             </>
@@ -138,44 +164,34 @@ export default function MatchPage({
                   filter: `saturate(${rivalCorruption}) grayscale(${1 - rivalCorruption})`,
                 }}
               >
-                <div className="window fill">
-                  <div className="title-bar">
-                    <div className="title-bar-text">SISTEMA RIVAL</div>
-                  </div>
-                  <div className="window-body network-map">
-                    <div className="network-ring ring-1" />
-                    <div className="network-ring ring-2" />
-                    <div className="network-ring ring-3" />
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      className="network-node"
-                      src="/assets/icons/network.png"
-                      alt=""
-                    />
+                <XPWindow fill title="SISTEMA RIVAL">
+                  <NetworkMap
+                    node={
+                      <span className="network-node win-icon" aria-hidden="true" />
+                    }
+                  >
                     <p className="hud">HP: {opponentHealth.toFixed(2)}</p>
                     <p className="hud">{iLost ? "Caído" : "En línea"}</p>
-                  </div>
-                </div>
+                  </NetworkMap>
+                </XPWindow>
               </div>
 
-              {activeAttackPuzzle && (
-                <ErrorPopup
-                  key={`rival-def-${activeAttackPuzzle.deadline}`}
-                  decorative
-                  {...activeAttackPuzzle}
+              {rivalErrors.map((puzzle) => (
+                <DecorativeXPError
+                  key={puzzle.deadline}
+                  position={positionFromSeed(puzzle.deadline)}
                 />
-              )}
-              {activeDefensePuzzle && (
-                <ErrorPopup
-                  key={`rival-atk-${activeDefensePuzzle.deadline}`}
-                  decorative
-                  {...activeDefensePuzzle}
-                />
-              )}
+              ))}
             </>
           )}
         </section>
       </div>
+
+      {flashKey > 0 && (
+        <div key={flashKey} className="screen-flash" aria-hidden="true" />
+      )}
+
+      <Taskbar tasks={["MI SISTEMA", "SISTEMA RIVAL"]} />
     </main>
   );
 }

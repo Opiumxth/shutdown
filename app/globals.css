@@ -47,6 +47,7 @@ body {
 
 .network-map {
   position: relative;
+  height: 100%;
   min-height: 260px;
   overflow: hidden;
   background: radial-gradient(circle at 50% 50%, #001a2e 0%, #000 80%);
@@ -144,16 +145,15 @@ body {
   width: 9px;
   height: 14px;
   background: #ffffff;
-  animation: bsod-blink 1s steps(1) infinite;
+  animation: bsod-blink 1.2s ease-in-out infinite;
 }
 
 @keyframes bsod-blink {
   0%,
-  49% {
+  100% {
     opacity: 1;
   }
-  50%,
-  100% {
+  50% {
     opacity: 0;
   }
 }
@@ -163,4 +163,201 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.win-icon {
+  width: 48px;
+  height: 48px;
+  background-image: url("/win-xp-pack/Icons/WinIcons_48.png");
+  background-repeat: no-repeat;
+  background-position: -576px -384px;
+  image-rendering: pixelated;
+}
+
+.taskbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  background: linear-gradient(to bottom, #316ac5, #245edb 4%, #316ac5 12%, #3a7aef);
+  border-top: 1px solid #0831d9;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.taskbar-start {
+  padding: 3px 12px;
+  font-weight: bold;
+  color: #ffffff;
+  background: linear-gradient(to bottom, #5aa83e, #2f7a1e);
+  border-radius: 4px;
+  border: 1px solid #1a4d0f;
+  cursor: pointer;
+}
+
+.taskbar-tasks {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.taskbar-task {
+  max-width: 160px;
+  padding: 3px 10px;
+  color: #ffffff;
+  background: linear-gradient(to bottom, #2a6adb, #1f56c7);
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.taskbar-clock {
+  color: #ffffff;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  padding-right: 8px;
+}
+
+.xp-error {
+  background: #ece9d8;
+  border: 1px solid #0831d9;
+  border-radius: 8px 8px 2px 2px;
+  box-shadow: inset -1px -1px 0 #ece9d8, 3px 3px 8px rgba(0, 0, 0, 0.45);
+  font-family: var(--font-sans), Tahoma, sans-serif;
+  overflow: hidden;
+  transform-origin: top left;
+  animation: xp-error-in 0.2s ease-out;
+}
+
+@keyframes xp-error-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.screen-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #ffffff;
+  pointer-events: none;
+  animation: screen-flash-out 0.25s ease-out forwards;
+}
+
+@keyframes screen-flash-out {
+  0% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.xp-error-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  background: linear-gradient(
+    to bottom,
+    #0a246a,
+    #2b5ab8 8%,
+    #3a7ada 40%,
+    #6a96d8 88%,
+    #4f83d4
+  );
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.xp-error-title {
+  letter-spacing: 0.5px;
+}
+
+.xp-error-close {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: linear-gradient(to bottom, #efefef, #c8c8c8);
+  border: 1px solid #7b7b7b;
+  border-radius: 3px;
+  color: #333333;
+  font-size: 12px;
+  line-height: 1;
+  cursor: default;
+}
+
+.xp-error-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 12px 8px;
+}
+
+.xp-error-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #d12f2f;
+  box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.xp-error-icon-cross {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.xp-error-icon-cross::before,
+.xp-error-icon-cross::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+.xp-error-icon-cross::before {
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.xp-error-icon-cross::after {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+.xp-error-text {
+  margin: 0;
+  color: #000000;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.xp-error-actions {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 12px;
+}
+
+.xp-error-actions .btn {
+  min-width: 80px;
 }
