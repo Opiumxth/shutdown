@@ -11,19 +11,22 @@ import type {
   PuzzleWithId,
 } from "@/components/minigame/types";
 
-// KNOWN BLOCKER (as of @portalsdk/core@0.1.5, the latest published version):
+// RESOLVED BLOCKER (as of @portalsdk/core@0.1.5, the latest published version):
 // ephemeral sends never reach the other peer. ChannelBuffer.ingest() in
 // node_modules/@portalsdk/core/dist/index.js explicitly drops any incoming
 // message with `ephemeral: true` before it reaches "message" listeners —
 // see its own SPEC comment ("dropped here rather than guessed at"). Verified
 // live: a persistent send arrives via onMessage with a timestamp matching
 // the sender's ack exactly; the same send with ephemeral:true never arrives
-// at all. So the "defense"/"result" sends below currently never reach the
-// rival — the turn loop only works today when tested against yourself.
-// Likely fix: drop `ephemeral: true` on these two sends (make them
-// persistent) once someone signs off on that — channel history for a
-// hackathon-length 1v1 match is a non-issue. Keep ephemeral reserved for the
-// live-cursor feature, where a dropped frame is harmless.
+// at all. Fix applied: the "defense"/"result" sends below are now plain
+// persistent sends (no `ephemeral`) — channel history for a hackathon-length
+// 1v1 match is a non-issue, and the rest of the turn/damage logic is
+// unaffected either way.
+//
+// Same limitation will hit the live-cursor extra (fase-1.md) when it's
+// built: cursor position can't go over `ephemeral` sends either, since the
+// rival's client would never see it. Use `channel.setMetadata()` there
+// instead (throttled), not `send`.
 type TurnRole = "attacker" | "defender";
 
 type DefenseMessageContent = PuzzleWithId & { turnId: string };
@@ -135,7 +138,6 @@ export function usePortalMatch(matchId: string) {
       setActiveAttackPuzzle(data.attack);
 
       const ack = await send({
-        ephemeral: true,
         type: "defense",
         content: { turnId, ...data.defense },
       });
@@ -154,7 +156,6 @@ export function usePortalMatch(matchId: string) {
       if (!turnId) return;
 
       const ack = await send({
-        ephemeral: true,
         type: "result",
         content: {
           turnId,
@@ -176,7 +177,6 @@ export function usePortalMatch(matchId: string) {
       if (!turnId) return;
 
       const ack = await send({
-        ephemeral: true,
         type: "result",
         content: {
           turnId,
