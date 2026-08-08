@@ -1,12 +1,18 @@
 "use client";
 
+import { useEffect } from "react";
 import type { CSSProperties } from "react";
+import { sound } from "@/lib/sound";
 
 type DecorativeXPErrorProps = {
   position: { top: string; left: string };
 };
 
 export function DecorativeXPError({ position }: DecorativeXPErrorProps) {
+  useEffect(() => {
+    sound.playError();
+  }, []);
+
   const style: CSSProperties = {
     position: "absolute",
     top: position.top,
@@ -30,9 +36,7 @@ export function DecorativeXPError({ position }: DecorativeXPErrorProps) {
         </button>
       </div>
       <div className="xp-error-body">
-        <div className="xp-error-icon" aria-hidden="true">
-          <span className="xp-error-icon-cross" />
-        </div>
+        <span className="xp-error-icon" aria-hidden="true" />
         <p className="xp-error-text">
           SYSTEM SHUTDOWN :: INITIATED BY EXTERNAL AGENT
         </p>
