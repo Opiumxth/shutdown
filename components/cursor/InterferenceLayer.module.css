@@ -1,0 +1,103 @@
+.rivalCursor {
+  position: fixed;
+  z-index: 2147483646;
+  pointer-events: none;
+  transform: translate(-2px, -2px);
+  transition: left 80ms linear, top 80ms linear;
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.8));
+}
+
+.rivalCursor img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.rivalCursor span {
+  display: block;
+  width: max-content;
+  margin: -2px 0 0 18px;
+  border: 1px solid #fff;
+  padding: 2px 5px;
+  background: #003399;
+  box-shadow: 1px 1px 0 #000;
+  color: #fff;
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+  color: #d8d8d8;
+  cursor: none;
+  font-family: "Perfect DOS VGA 437 Win", "Courier New", monospace;
+}
+
+.scanlines {
+  position: absolute;
+  inset: 0;
+  opacity: 0.22;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    rgba(255, 255, 255, 0.25) 4px
+  );
+  animation: flicker 180ms steps(2, end) infinite;
+}
+
+.blackoutMessage {
+  position: relative;
+  max-width: 90vw;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 2px 0 #444, -2px 0 #222;
+}
+
+.blackoutMessage p {
+  margin: 8px 0;
+}
+
+.signal {
+  color: #fff;
+  font-size: clamp(32px, 8vw, 72px);
+  letter-spacing: 0.08em;
+}
+
+.countdown {
+  color: #aaa;
+  font-size: 14px;
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 0.15;
+  }
+
+  50% {
+    opacity: 0.27;
+  }
+
+  100% {
+    opacity: 0.19;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rivalCursor {
+    transition: none;
+  }
+
+  .scanlines {
+    animation: none;
+  }
+}
