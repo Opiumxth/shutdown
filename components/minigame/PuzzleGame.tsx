@@ -89,15 +89,13 @@ export function PuzzleGame({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    setItems((current) => {
-      const oldIndex = current.indexOf(String(active.id));
-      const newIndex = current.indexOf(String(over.id));
-      const next = arrayMove(current, oldIndex, newIndex);
-      if (next.every((item, i) => item === correctOrder[i])) {
-        finish(true);
-      }
-      return next;
-    });
+    const oldIndex = items.indexOf(String(active.id));
+    const newIndex = items.indexOf(String(over.id));
+    const next = arrayMove(items, oldIndex, newIndex);
+    setItems(next);
+    if (next.every((item, i) => item === correctOrder[i])) {
+      finish(true);
+    }
   }
 
   return (
