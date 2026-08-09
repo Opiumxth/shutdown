@@ -14,12 +14,18 @@ import type { PuzzleData, PuzzleResult } from "@/components/minigame/types";
 import { ATTACK_COOLDOWN_MS, MAX_HP } from "@/lib/constants";
 import { sound } from "@/lib/sound";
 
+const DEFAULT_THEME = "Software";
+
 export default function MatchPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ theme?: string }>;
 }) {
   const { id } = use(params);
+  const { theme } = use(searchParams);
+  const attackTheme = theme || DEFAULT_THEME;
   const {
     status,
     participantCount,
@@ -117,7 +123,7 @@ export default function MatchPage({
       ...prev,
       "> [ATTACK] Desplegando vector de ataque...",
     ]);
-    void attack("Software");
+    void attack(attackTheme);
   }
 
   const [rivalErrors, setRivalErrors] = useState<PuzzleData[]>([]);
