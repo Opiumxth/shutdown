@@ -45,142 +45,121 @@ export default function Home() {
     router.push(`/match/${matchId}?theme=${encodeURIComponent(selectedTheme)}`);
   }
 
-  const statusText =
+  const footerHint =
     step === "start"
-      ? "Listo."
+      ? "enter  unirse"
       : step === "created"
-        ? "Partida creada — compartí el código."
-        : "Elegí un tema para empezar.";
+        ? "click  copiar código"
+        : "1-4  elegir tema";
 
   return (
-    <main className="flex flex-1 items-center justify-center p-8">
-      <div className="window" style={{ width: 460 }}>
-        <div className="title-bar">
-          <div className="title-bar-text">shutdown.exe — Duelo de hacking</div>
-          <div className="title-bar-controls">
-            <button aria-label="Minimize"></button>
-            <button aria-label="Maximize"></button>
-            <button aria-label="Close"></button>
-          </div>
+    <main className="relative flex flex-1 items-center justify-center p-8">
+      <div className="landing-backdrop" aria-hidden="true" />
+
+      <div className="terminal-card">
+        <div className="terminal-card-header">
+          <span className="terminal-dot red" />
+          <span className="terminal-dot yellow" />
+          <span className="terminal-dot green" />
+          <span className="terminal-card-path">~/shutdown</span>
         </div>
 
-        <div
-          className="terminal-banner"
-          style={{
-            background: "#0c0c0c",
-            color: "#33ff33",
-            fontFamily: "monospace",
-            padding: "16px",
-          }}
-        >
-          <div
-            style={{
-              border: "1px solid #33ff33",
-              textAlign: "center",
-              padding: "6px 0",
-              marginBottom: 10,
-            }}
-          >
-            <pre style={{ margin: 0, fontSize: 16, letterSpacing: 3 }}>SHUTDOWN.EXE</pre>
-          </div>
-          <p style={{ margin: "2px 0" }}>&gt; iniciando protocolo de duelo...</p>
-          <p style={{ margin: "2px 0" }}>&gt; conexión segura con Portal: OK</p>
-          <p style={{ margin: "2px 0" }}>
-            &gt; listo<span className="blink">_</span>
+        <div className="terminal-card-body">
+          <pre className="ascii-title">SHUTDOWN</pre>
+          <p className="terminal-subtitle">
+            duelo de hacking 1v1 en tiempo real
           </p>
-        </div>
 
-        <div className="window-body">
           {step === "start" && (
             <>
-              <fieldset>
-                <legend>Unirse a partida</legend>
-                <div className="field-row-stacked" style={{ width: "100%" }}>
-                  <label htmlFor="join-code">Código de partida</label>
-                  <input
-                    id="join-code"
-                    type="text"
-                    value={joinId}
-                    onChange={(e) => setJoinId(e.target.value)}
-                    placeholder="Ej: A1B2C3"
-                    autoFocus
-                  />
-                </div>
-                <section className="field-row" style={{ justifyContent: "flex-end", marginTop: 8 }}>
-                  <button type="button" onClick={handleJoin} disabled={!joinId.trim()}>
-                    Unirse
-                  </button>
-                </section>
-              </fieldset>
+              <label className="terminal-label" htmlFor="join-code">
+                Unirse a partida
+              </label>
+              <input
+                id="join-code"
+                className="terminal-input"
+                type="text"
+                value={joinId}
+                onChange={(e) => setJoinId(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+                placeholder="código, ej: A1B2C3"
+                autoFocus
+                style={{ marginBottom: 10 }}
+              />
+              <button
+                type="button"
+                className="terminal-btn terminal-btn-primary"
+                onClick={handleJoin}
+                disabled={!joinId.trim()}
+              >
+                Unirse
+              </button>
 
-              <p style={{ textAlign: "center", margin: "12px 0", opacity: 0.6 }}>— o —</p>
+              <p className="terminal-divider">— o —</p>
 
-              <section className="field-row" style={{ justifyContent: "center" }}>
-                <button type="button" onClick={handleCreate}>
-                  Crear partida nueva
-                </button>
-              </section>
+              <button
+                type="button"
+                className="terminal-btn"
+                style={{ width: "100%" }}
+                onClick={handleCreate}
+              >
+                Crear partida nueva
+              </button>
             </>
           )}
 
           {step === "created" && (
             <>
-              <fieldset>
-                <legend>Partida creada</legend>
-                <p>Pasale este código a tu rival para que se una:</p>
-                <div className="field-row">
-                  <input
-                    readOnly
-                    value={matchId}
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 22,
-                      fontWeight: "bold",
-                      letterSpacing: 2,
-                      textAlign: "center",
-                      flex: 1,
-                    }}
-                  />
-                  <button type="button" onClick={handleCopy}>
-                    {copied ? "Copiado" : "Copiar"}
-                  </button>
-                </div>
-              </fieldset>
-              <section className="field-row" style={{ justifyContent: "flex-end", marginTop: 12 }}>
-                <button type="button" onClick={() => setStep("theme")}>
-                  Continuar
-                </button>
-              </section>
+              <label className="terminal-label">Pasale este código a tu rival</label>
+              <div className="terminal-code-box">{matchId}</div>
+              <button
+                type="button"
+                className="terminal-btn"
+                style={{ width: "100%", marginBottom: 10 }}
+                onClick={handleCopy}
+              >
+                {copied ? "Copiado" : "Copiar código"}
+              </button>
+              <button
+                type="button"
+                className="terminal-btn terminal-btn-primary"
+                onClick={() => setStep("theme")}
+              >
+                Continuar
+              </button>
             </>
           )}
 
           {step === "theme" && (
-            <fieldset>
-              <legend>Elegí el tema de tu ataque</legend>
-              {THEMES.map((theme) => (
-                <div className="field-row" key={theme}>
-                  <input
-                    id={`theme-${theme}`}
-                    type="radio"
-                    name="theme"
-                    checked={selectedTheme === theme}
-                    onChange={() => setSelectedTheme(theme)}
-                  />
-                  <label htmlFor={`theme-${theme}`}>{theme}</label>
-                </div>
-              ))}
-              <section className="field-row" style={{ justifyContent: "flex-end", marginTop: 12 }}>
-                <button type="button" onClick={handleEnter} disabled={!selectedTheme}>
-                  Entrar a la partida
-                </button>
-              </section>
-            </fieldset>
+            <>
+              <label className="terminal-label">Elegí el tema de tu ataque</label>
+              <div className="terminal-theme-row">
+                {THEMES.map((theme) => (
+                  <button
+                    key={theme}
+                    type="button"
+                    className={`terminal-theme-pill${selectedTheme === theme ? " selected" : ""}`}
+                    onClick={() => setSelectedTheme(theme)}
+                  >
+                    {theme}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="terminal-btn terminal-btn-primary"
+                onClick={handleEnter}
+                disabled={!selectedTheme}
+              >
+                Entrar a la partida
+              </button>
+            </>
           )}
         </div>
 
-        <div className="status-bar">
-          <p className="status-bar-field">{statusText}</p>
-          {matchId && <p className="status-bar-field">Partida: {matchId}</p>}
+        <div className="terminal-card-footer">
+          <span>{footerHint}</span>
+          <span>{matchId ? `partida ${matchId}` : "shutdown.exe"}</span>
         </div>
       </div>
     </main>
