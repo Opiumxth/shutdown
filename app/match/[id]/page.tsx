@@ -10,9 +10,13 @@ import { DecorativeXPError } from "@/components/xp-ui/DecorativeXPError";
 import { BSOD } from "@/components/xp-ui/BSOD";
 import { VictoryWindow } from "@/components/xp-ui/VictoryWindow";
 import { SystemLog } from "@/components/xp-ui/SystemLog";
+import { AgentMarketplace, type AgentType } from "@/components/xp-ui/AgentMarketplace";
+import { ActionNode } from "@/components/xp-ui/ActionNode";
 import type { PuzzleData, PuzzleResult } from "@/components/minigame/types";
 import { ATTACK_COOLDOWN_MS, MAX_HP } from "@/lib/constants";
 import { sound } from "@/lib/sound";
+
+export type NodeRole = "idle" | AgentType;
 
 export default function MatchPage({
   params,
@@ -34,6 +38,13 @@ export default function MatchPage({
 
   const [cooldownLeft, setCooldownLeft] = useState(0);
   const [shaking, setShaking] = useState(false);
+  const [showMarketplace, setShowMarketplace] = useState(false);
+  const [tokens, setTokens] = useState(0);
+  const [nodeRoles, setNodeRoles] = useState<NodeRole[]>([
+    "idle",
+    "idle",
+    "idle",
+  ]);
   const prevHealthRef = useRef(myHealth);
   const prevOpponentHealthRef = useRef(opponentHealth);
   const wasRivalConnectedRef = useRef(participantCount >= 2);
@@ -130,8 +141,47 @@ export default function MatchPage({
           ? prev
           : [...prev, puzzle].slice(-5),
       );
+      setTokens((prev) => prev + 25);
     }
     void resolveAttack(result);
+  }
+
+  const NODE_COSTS: Record<AgentType, number> = {
+    miner: 50,
+    defender: 100,
+    attacker: 150,
+  };
+
+  function handleNodeClick(index: number) {
+    const role = nodeRoles[index];
+    if (role === "idle") {
+      if (tokens < NODE_COSTS.miner) {
+        setMyLogs((prev) => [
+          ...prev,
+          "> [WARN] Tokens insuficientes para asignar nodo.",
+        ]);
+        return;
+      }
+      sound.playClick();
+      setTokens((prev) => prev - NODE_COSTS.miner);
+      setNodeRoles((prev) =>
+        prev.map((r, i) => (i === index ? "miner" : r)),
+      );
+      setMyLogs((prev) => [
+        ...prev,
+        "> [NET] Nodo asignado como MINER (+tokens/s).",
+      ]);
+      return;
+    }
+    if (role === "attacker") {
+      handleAttack();
+      return;
+    }
+    sound.playClick();
+    setMyLogs((prev) => [
+      ...prev,
+      `> [INFO] Nodo ${index + 1} (${role.toUpperCase()}) seleccionado.`,
+    ]);
   }
 
   function positionFromSeed(seed: number) {
@@ -173,43 +223,57 @@ export default function MatchPage({
             <XPWindow fill title={`MI SISTEMA — ${id}`}>
               <NetworkMap
                 node={
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="attack-node relative flex flex-col items-center pointer-events-auto">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/assets/icons/central-node.png"
-                        alt="Atacar"
-                        draggable={false}
-                        className={`w-16 h-16 object-contain [image-rendering:pixelated] ${
-                          onCooldown
-                            ? "opacity-40 cursor-not-allowed"
-                            : "cursor-pointer"
-                        }`}
-                        onClick={handleAttack}
-                      />
-                      <div className="h-1 w-24 overflow-hidden bg-zinc-700">
-                        <div
-                          className="h-full bg-green-500"
-                          style={{
-                            width: `${(cooldownLeft / ATTACK_COOLDOWN_MS) * 100}%`,
-                          }}
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="attack-node relative flex flex-col items-center pointer-events-auto">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src="/assets/icons/central-node.png"
+                          alt="Agent Marketplace"
+                          draggable={false}
+                          className={`w-16 h-16 object-contain [image-rendering:pixelated] ${
+                            onCooldown
+                              ? "opacity-40 cursor-not-allowed"
+                              : "cursor-pointer"
+                          }`}
+                          onClick={() => setShowMarketplace((v) => !v)}
+                        />
+                        <span
+                          className="hud mt-1"
+                          style={{ fontSize: 10, minHeight: "15px" }}
+                        >
+                          {onCooldown ? (
+                            <span className="text-cyan-400">
+                              {Math.ceil(cooldownLeft / 1000)}s
+                            </span>
+                          ) : (
+                            <span className="text-green-500 font-bold tracking-widest">
+                              AGENT MARKETPLACE
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {nodeRoles.map((role, index) => (
+                      <div
+                        key={index}
+                        className="pointer-events-auto"
+                        style={{
+                          position: "absolute",
+                          top: index === 2 ? "78%" : index === 0 ? "16%" : "16%",
+                          left: index === 0 ? "16%" : index === 1 ? "74%" : "45%",
+                          transform: "translate(-50%, -50%)",
+                        }}
+                      >
+                        <ActionNode
+                          role={role}
+                          onClick={() => handleNodeClick(index)}
+                          cooldownRatio={cooldownLeft / ATTACK_COOLDOWN_MS}
+                          onCooldown={onCooldown}
                         />
                       </div>
-                      <span
-                        className="hud mt-1"
-                        style={{ fontSize: 10, minHeight: "15px" }}
-                      >
-                        {onCooldown ? (
-                          <span className="text-cyan-400">
-                            {Math.ceil(cooldownLeft / 1000)}s
-                          </span>
-                        ) : (
-                          <span className="text-green-500 font-bold tracking-widest">
-                            DEPLOY EXPLOIT
-                          </span>
-                        )}
-                      </span>
-                    </div>
+                    ))}
                   </div>
                 }
               >
@@ -220,9 +284,33 @@ export default function MatchPage({
                     : "Rival conectado"}
                 </p>
                 <p className="hud">HP: {myHealth.toFixed(2)}</p>
+                <p className="hud">Tokens: {tokens}</p>
               </NetworkMap>
             </XPWindow>
           </div>
+
+          {showMarketplace && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50">
+              <AgentMarketplace
+                tokens={tokens}
+                onClose={() => setShowMarketplace(false)}
+                onPurchase={(agentType) => {
+                  const cost =
+                    agentType === "miner" ? 50 : agentType === "defender" ? 100 : 150;
+                  if (tokens < cost) return;
+                  setTokens((prev) => prev - cost);
+                  const idleIndex = nodeRoles.indexOf("idle");
+                  setNodeRoles((prev) =>
+                    prev.map((r, i) => (i === idleIndex ? agentType : r)),
+                  );
+                  setMyLogs((prev) => [
+                    ...prev,
+                    `> [NET] Nodo asignado como ${agentType.toUpperCase()}.`,
+                  ]);
+                }}
+              />
+            </div>
+          )}
 
           <SystemLog logs={myLogs} maxEntries={8} />
 
