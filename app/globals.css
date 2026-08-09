@@ -428,3 +428,199 @@ img {
 .screen-critical {
   filter: grayscale(50%) sepia(50%);
 }
+
+.blink {
+  animation: bsod-blink 1s steps(2, start) infinite;
+}
+
+/* Landing — TUI moderna, deliberadamente distinta a la estética xp.css del
+   resto del juego: es la "terminal" desde la que entrás al sistema retro. */
+.landing-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(8, 9, 14, 0.6);
+}
+
+.terminal-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  border-radius: 12px;
+  background: #16171c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  font-family: "Perfect DOS VGA 437 Win", "Courier New", monospace;
+  color: #e8e8ea;
+}
+
+.terminal-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #1d1e24;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.terminal-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.terminal-dot.red {
+  background: #ff5f56;
+}
+
+.terminal-dot.yellow {
+  background: #ffbd2e;
+}
+
+.terminal-dot.green {
+  background: #27c93f;
+}
+
+.terminal-card-path {
+  margin-left: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.terminal-card-body {
+  padding: 36px 28px 26px;
+}
+
+.ascii-title {
+  font-size: 40px;
+  letter-spacing: 6px;
+  margin: 0 0 8px;
+  color: #f5f5f5;
+  text-align: center;
+}
+
+.terminal-subtitle {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0 0 28px;
+}
+
+.terminal-label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+}
+
+.terminal-input {
+  width: 100%;
+  background: #0c0d11;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.terminal-input:focus {
+  outline: none;
+  border-color: #5b8dee;
+}
+
+.terminal-btn {
+  background: #24252c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 9px 18px;
+  color: #f2f2f2;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.terminal-btn:hover:not(:disabled) {
+  background: #2d2f38;
+}
+
+.terminal-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.terminal-btn-primary {
+  background: #3b6fe0;
+  border-color: #3b6fe0;
+  width: 100%;
+}
+
+.terminal-btn-primary:hover:not(:disabled) {
+  background: #4a7bf0;
+}
+
+.terminal-divider {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  margin: 20px 0;
+}
+
+.terminal-theme-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.terminal-theme-pill {
+  flex: 1 1 calc(50% - 8px);
+  background: #1d1e24;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 10px 8px;
+  color: #e8e8ea;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.terminal-theme-pill:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.terminal-theme-pill.selected {
+  border-color: #3b6fe0;
+  background: rgba(59, 111, 224, 0.16);
+  color: #ffffff;
+}
+
+.terminal-code-box {
+  width: 100%;
+  background: #0c0d11;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 14px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: 4px;
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.terminal-card-footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+}
