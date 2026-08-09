@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useChannel } from "@portalsdk/react";
 import { calculateDamage } from "@/lib/damage";
 import { MAX_HP } from "@/lib/constants";
@@ -64,6 +64,7 @@ export function usePortalMatch(matchId: string) {
   const activeDefenseTurnIdRef = useRef<string | null>(null);
   const pendingTurnsRef = useRef(new Map<string, PendingTurn>());
   const processedTurnIdsRef = useRef(new Set<string>());
+  const didRestoreHistoryRef = useRef(false);
 
   const applyResult = useCallback(
     (turnId: string, role: TurnRole, success: boolean, timestamp: number) => {
@@ -97,7 +98,7 @@ export function usePortalMatch(matchId: string) {
     [],
   );
 
-  const { status, presence, send } = useChannel<MatchMessage>({
+  const { status, presence, messages, me, send } = useChannel<MatchMessage>({
     channelId: `match:${matchId}`,
     onMessage: (msg) => {
       if (msg.type === "defense") {
@@ -119,6 +120,31 @@ export function usePortalMatch(matchId: string) {
       }
     },
   });
+
+  useEffect(() => {
+    if (status !== "ready" || !me || didRestoreHistoryRef.current) return;
+    didRestoreHistoryRef.current = true;
+
+    for (const msg of messages) {
+      if (msg.type !== "defense") continue;
+
+      const { turnId } = msg.content as DefenseMessageContent;
+      if (processedTurnIdsRef.current.has(turnId)) continue;
+      if (pendingTurnsRef.current.has(turnId)) continue;
+
+      pendingTurnsRef.current.set(turnId, {
+        myRole: msg.sender.id === me.id ? "attacker" : "defender",
+        anchorTime: msg.timestamp,
+      });
+    }
+
+    for (const msg of messages) {
+      if (msg.type !== "result") continue;
+
+      const { turnId, role, success } = msg.content as ResultMessageContent;
+      applyResult(turnId, role, success, msg.timestamp);
+    }
+  }, [status, messages, me, applyResult]);
 
   const participantCount = presence?.kind === "detailed" ? presence.count : 0;
 
