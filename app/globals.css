@@ -116,6 +116,7 @@ img {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  pointer-events: auto;
   padding: 4px 6px;
   font-family: "Perfect DOS VGA 437 Win", "Courier New", monospace;
   font-size: 13px;
