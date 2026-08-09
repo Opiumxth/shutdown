@@ -7,7 +7,6 @@ import { XPWindow } from "@/components/xp-ui/XPWindow";
 import { NetworkMap } from "@/components/xp-ui/NetworkMap";
 import { Taskbar } from "@/components/xp-ui/Taskbar";
 import { DecorativeXPError } from "@/components/xp-ui/DecorativeXPError";
-import { GhostCursor } from "@/components/xp-ui/GhostCursor";
 import { BSOD } from "@/components/xp-ui/BSOD";
 import { VictoryWindow } from "@/components/xp-ui/VictoryWindow";
 import { SystemLog } from "@/components/xp-ui/SystemLog";
@@ -31,7 +30,6 @@ export default function MatchPage({
     attack,
     resolveAttack,
     resolveDefense,
-    rivalMouse,
   } = usePortalMatch(id);
 
   const [cooldownLeft, setCooldownLeft] = useState(0);
@@ -272,8 +270,6 @@ export default function MatchPage({
               position={positionFromSeed(puzzle.deadline)}
             />
           ))}
-
-          {rivalMouse && <GhostCursor x={rivalMouse.x} y={rivalMouse.y} />}
         </section>
       </div>
 
