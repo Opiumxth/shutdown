@@ -1,7 +1,18 @@
+export type PuzzleType =
+  | "sequence"
+  | "intruder"
+  | "synergy"
+  | "debug"
+  | "upgrade";
+
 export type PuzzleData = {
+  type: PuzzleType;
+  theme: string;
   title: string;
-  scrambledItems: string[];
-  correctOrder: string[];
+  instruction: string;
+  context: string;
+  options: string[];
+  correctAnswer: string[];
   deadline: number;
 };
 

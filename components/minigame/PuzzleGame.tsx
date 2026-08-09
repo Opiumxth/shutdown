@@ -48,13 +48,17 @@ function SortableItem({ id }: { id: string }) {
 }
 
 export function PuzzleGame({
+  type,
   title,
-  scrambledItems,
-  correctOrder,
+  instruction,
+  context,
+  options,
+  correctAnswer,
   deadline,
   onResult,
 }: PuzzleGameProps) {
-  const [items, setItems] = useState(scrambledItems);
+  const [items, setItems] = useState(options);
+  const [selected, setSelected] = useState<string[]>([]);
   const itemsRef = useRef(items);
   const startTimeRef = useRef(0);
   const resolvedRef = useRef(false);
@@ -70,7 +74,7 @@ export function PuzzleGame({
 
   useEffect(() => {
     startTimeRef.current = Date.now();
-    // Deadline is a real timestamp; syncing the initial countdown needs the real clock.
+    // Deadline is a real timestamp; syncing the countdown needs the real clock.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRemaining(Math.max(0, deadline - Date.now()));
 
@@ -100,18 +104,32 @@ export function PuzzleGame({
     const next = arrayMove(current, oldIndex, newIndex);
     setItems(next);
 
-    if (next.every((item, i) => item === correctOrder[i])) {
+    if (next.every((item, index) => item === correctAnswer[index])) {
       queueMicrotask(() => finish(true));
     }
   }
 
-  return (
-    <div className="window" style={{ width: 360 }}>
-      <div className="title-bar">
-        <div className="title-bar-text">{title}</div>
-      </div>
-      <div className="window-body">
-        <p>Reordena los elementos antes de que se acabe el tiempo.</p>
+  function toggleSynergy(option: string) {
+    setSelected((current) => {
+      if (current.includes(option)) {
+        return current.filter((item) => item !== option);
+      }
+      if (current.length === 3) return current;
+      return [...current, option];
+    });
+  }
+
+  function validateSynergy() {
+    if (selected.length !== 3) return;
+    const success =
+      correctAnswer.length === selected.length &&
+      selected.every((answer) => correctAnswer.includes(answer));
+    finish(success);
+  }
+
+  function renderPuzzle() {
+    if (type === "sequence") {
+      return (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -125,6 +143,96 @@ export function PuzzleGame({
             </ul>
           </SortableContext>
         </DndContext>
+      );
+    }
+
+    if (type === "synergy") {
+      return (
+        <div>
+          <p>
+            Seleccionados: <strong>{selected.length}/3</strong>
+          </p>
+          {options.map((option) => {
+            const isSelected = selected.includes(option);
+            return (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => toggleSynergy(option)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  marginBottom: 6,
+                  minHeight: 30,
+                  textAlign: "left",
+                  whiteSpace: "normal",
+                  background: isSelected ? "#0a246a" : undefined,
+                  color: isSelected ? "white" : undefined,
+                }}
+              >
+                {isSelected ? "[X] " : "[ ] "}
+                {option}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            disabled={selected.length !== 3}
+            onClick={validateSynergy}
+            style={{ width: "100%", marginTop: 4 }}
+          >
+            VALIDAR COMBO
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => finish(option === correctAnswer[0])}
+            style={{
+              display: "block",
+              width: "100%",
+              marginBottom: 6,
+              minHeight: 30,
+              textAlign: "left",
+              whiteSpace: "normal",
+            }}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="window" style={{ width: 440, maxWidth: "calc(100vw - 24px)" }}>
+      <div className="title-bar">
+        <div className="title-bar-text">{title}</div>
+      </div>
+      <div className="window-body">
+        <p>{instruction}</p>
+        {context ? (
+          <pre
+            style={{
+              padding: 8,
+              overflowX: "auto",
+              whiteSpace: "pre-wrap",
+              background: "#000",
+              color: "#00ff00",
+              fontFamily: "monospace",
+            }}
+          >
+            {context}
+          </pre>
+        ) : null}
+        {renderPuzzle()}
         <progress
           max={PUZZLE_DEADLINE_MS}
           value={remaining}
