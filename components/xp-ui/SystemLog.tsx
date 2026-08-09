@@ -47,7 +47,10 @@ export const SystemLog = forwardRef<SystemLogHandle, SystemLogProps>(
         <div className="system-log-titlebar">
           <span>cmd.exe — shutdown</span>
         </div>
-        <div className="system-log-scroll" ref={scrollRef}>
+        <div
+          className="system-log-scroll pointer-events-auto h-full overflow-y-auto"
+          ref={scrollRef}
+        >
           {entries.map((line, index) => (
             <p key={index} className="system-log-line">
               {line}

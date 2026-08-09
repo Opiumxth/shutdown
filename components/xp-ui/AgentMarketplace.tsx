@@ -5,8 +5,11 @@ import { sound } from "@/lib/sound";
 
 export type AgentType = "miner" | "defender" | "attacker";
 
+export const MAX_AGENTS_PER_TYPE = 3;
+
 type AgentMarketplaceProps = {
   tokens: number;
+  counts: Record<AgentType, number>;
   onPurchase: (agentType: AgentType) => void;
   onClose: () => void;
 };
@@ -45,6 +48,7 @@ const AGENTS: AgentCard[] = [
 
 export function AgentMarketplace({
   tokens,
+  counts,
   onPurchase,
   onClose,
 }: AgentMarketplaceProps) {
@@ -59,12 +63,15 @@ export function AgentMarketplace({
             sound.playClick();
             onClose();
           }}
+          onMouseEnter={() => sound.playHover()}
         />
       }
     >
       <div className="grid grid-cols-2 gap-2">
         {AGENTS.map((agent) => {
           const affordable = tokens >= agent.cost;
+          const count = counts[agent.type];
+          const atMax = count >= MAX_AGENTS_PER_TYPE;
           return (
             <div
               key={agent.type}
@@ -77,22 +84,34 @@ export function AgentMarketplace({
                 draggable={false}
                 className="h-12 w-12 object-contain [image-rendering:pixelated]"
               />
-              <span className="font-bold text-[#003dd7]">{agent.name}</span>
+              <span className="font-bold text-[#003dd7]">
+                {agent.name}
+                {count > 0 && (
+                  <span className="ml-1 text-[10px] text-[#333333]">
+                    ×{count}/{MAX_AGENTS_PER_TYPE}
+                  </span>
+                )}
+              </span>
               <span className="text-[11px] text-[#333333]">
                 {agent.description}
               </span>
               <button
                 type="button"
-                disabled={!affordable}
+                disabled={atMax || !affordable}
                 onClick={() => {
                   sound.playClick();
                   onPurchase(agent.type);
                 }}
+                onMouseEnter={() => sound.playHover()}
                 className={`btn ${
-                  affordable ? "" : "cursor-not-allowed opacity-40"
+                  atMax || !affordable ? "cursor-not-allowed opacity-40" : ""
                 }`}
               >
-                {agent.cost} Tokens
+                {atMax
+                  ? "DESPLEGADO"
+                  : count > 0
+                    ? `+1 (${count + 1}/${MAX_AGENTS_PER_TYPE})`
+                    : `${agent.cost} Tokens`}
               </button>
             </div>
           );
