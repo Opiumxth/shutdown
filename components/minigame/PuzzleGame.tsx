@@ -16,11 +16,12 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { PUZZLE_DEADLINE_MS } from "@/lib/constants";
+import { sound } from "@/lib/sound";
 import type { PuzzleData, PuzzleResult } from "./types";
 
 type PuzzleGameProps = PuzzleData & {
   onResult: (result: PuzzleResult) => void;
+  onClose?: () => void;
 };
 
 function SortableItem({ id }: { id: string }) {
@@ -56,13 +57,13 @@ export function PuzzleGame({
   correctAnswer,
   deadline,
   onResult,
+  onClose,
 }: PuzzleGameProps) {
   const [items, setItems] = useState(options);
   const [selected, setSelected] = useState<string[]>([]);
   const itemsRef = useRef(items);
   const startTimeRef = useRef(0);
   const resolvedRef = useRef(false);
-  const [remaining, setRemaining] = useState(PUZZLE_DEADLINE_MS);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -74,21 +75,26 @@ export function PuzzleGame({
 
   useEffect(() => {
     startTimeRef.current = Date.now();
-    // Deadline is a real timestamp; syncing the countdown needs the real clock.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRemaining(Math.max(0, deadline - Date.now()));
-
-    const interval = setInterval(() => {
-      const left = deadline - Date.now();
-      setRemaining(Math.max(0, left));
-      if (left <= 0) {
-        clearInterval(interval);
-        finish(false);
-      }
-    }, 100);
-    return () => clearInterval(interval);
+    // Auto-fail when the shared deadline elapses. Uses the real clock.
+    const timeout = setTimeout(() => {
+      finish(false);
+    }, Math.max(0, deadline - Date.now()));
+    return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deadline]);
+
+  useEffect(() => {
+    if (!onClose) return;
+    const close = onClose;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        sound.playClick();
+        close();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   useEffect(() => {
     itemsRef.current = items;
@@ -148,7 +154,7 @@ export function PuzzleGame({
 
     if (type === "synergy") {
       return (
-        <div>
+        <div className="flex flex-col gap-2">
           <p>
             Seleccionados: <strong>{selected.length}/3</strong>
           </p>
@@ -160,16 +166,11 @@ export function PuzzleGame({
                 type="button"
                 aria-pressed={isSelected}
                 onClick={() => toggleSynergy(option)}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  marginBottom: 6,
-                  minHeight: 30,
-                  textAlign: "left",
-                  whiteSpace: "normal",
-                  background: isSelected ? "#0a246a" : undefined,
-                  color: isSelected ? "white" : undefined,
-                }}
+                className={`w-full text-left p-2 border rounded transition-colors ${
+                  isSelected
+                    ? "border-blue-500 bg-blue-500 text-white"
+                    : "border-gray-400 hover:bg-blue-100 hover:border-blue-500"
+                }`}
               >
                 {isSelected ? "[X] " : "[ ] "}
                 {option}
@@ -180,7 +181,7 @@ export function PuzzleGame({
             type="button"
             disabled={selected.length !== 3}
             onClick={validateSynergy}
-            style={{ width: "100%", marginTop: 4 }}
+            className="w-full mt-4 p-2 border border-gray-400 rounded transition-colors hover:bg-blue-100 hover:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             VALIDAR COMBO
           </button>
@@ -189,20 +190,13 @@ export function PuzzleGame({
     }
 
     return (
-      <div>
+      <div className="flex flex-col gap-2">
         {options.map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => finish(option === correctAnswer[0])}
-            style={{
-              display: "block",
-              width: "100%",
-              marginBottom: 6,
-              minHeight: 30,
-              textAlign: "left",
-              whiteSpace: "normal",
-            }}
+            className="w-full text-left p-2 border border-gray-400 rounded hover:bg-blue-100 hover:border-blue-500 transition-colors"
           >
             {option}
           </button>
@@ -215,30 +209,38 @@ export function PuzzleGame({
     <div className="window" style={{ width: 440, maxWidth: "calc(100vw - 24px)" }}>
       <div className="title-bar">
         <div className="title-bar-text">{title}</div>
+        {onClose && (
+          <div className="title-bar-controls">
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => {
+                sound.playClick();
+                onClose();
+              }}
+            />
+          </div>
+        )}
       </div>
       <div className="window-body">
-        <p>{instruction}</p>
-        {context ? (
-          <pre
-            style={{
-              padding: 8,
-              overflowX: "auto",
-              whiteSpace: "pre-wrap",
-              background: "#000",
-              color: "#00ff00",
-              fontFamily: "monospace",
-            }}
-          >
-            {context}
-          </pre>
-        ) : null}
-        {renderPuzzle()}
-        <progress
-          max={PUZZLE_DEADLINE_MS}
-          value={remaining}
-          style={{ width: "100%", marginTop: 8 }}
-        />
-        <p>{Math.ceil(remaining / 1000)}s</p>
+        <div className="flex flex-col gap-3 p-4 overflow-y-auto max-h-[60vh] bg-white text-black">
+          <p>{instruction}</p>
+          {context ? (
+            <pre
+              style={{
+                padding: 8,
+                overflowX: "auto",
+                whiteSpace: "pre-wrap",
+                background: "#000",
+                color: "#00ff00",
+                fontFamily: "monospace",
+              }}
+            >
+              {context}
+            </pre>
+          ) : null}
+          {renderPuzzle()}
+        </div>
       </div>
     </div>
   );
