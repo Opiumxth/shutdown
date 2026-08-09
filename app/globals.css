@@ -428,3 +428,7 @@ img {
 .screen-critical {
   filter: grayscale(50%) sepia(50%);
 }
+
+.blink {
+  animation: bsod-blink 1s steps(2, start) infinite;
+}

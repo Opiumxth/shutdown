@@ -54,7 +54,7 @@ export default function Home() {
 
   return (
     <main className="flex flex-1 items-center justify-center p-8">
-      <div className="window" style={{ width: 420 }}>
+      <div className="window" style={{ width: 460 }}>
         <div className="title-bar">
           <div className="title-bar-text">shutdown.exe — Duelo de hacking</div>
           <div className="title-bar-controls">
@@ -64,18 +64,33 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="window-body">
-          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "8px 0 16px" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/icons/central-node.png" alt="" width={40} height={40} />
-            <div>
-              <p style={{ fontSize: 18, fontWeight: "bold", margin: 0 }}>SHUTDOWN</p>
-              <p style={{ margin: 0, opacity: 0.75 }}>
-                Atacá con minijuegos contrarreloj. Defendete antes de apagarte.
-              </p>
-            </div>
+        <div
+          className="terminal-banner"
+          style={{
+            background: "#0c0c0c",
+            color: "#33ff33",
+            fontFamily: "monospace",
+            padding: "16px",
+          }}
+        >
+          <div
+            style={{
+              border: "1px solid #33ff33",
+              textAlign: "center",
+              padding: "6px 0",
+              marginBottom: 10,
+            }}
+          >
+            <pre style={{ margin: 0, fontSize: 16, letterSpacing: 3 }}>SHUTDOWN.EXE</pre>
           </div>
+          <p style={{ margin: "2px 0" }}>&gt; iniciando protocolo de duelo...</p>
+          <p style={{ margin: "2px 0" }}>&gt; conexión segura con Portal: OK</p>
+          <p style={{ margin: "2px 0" }}>
+            &gt; listo<span className="blink">_</span>
+          </p>
+        </div>
 
+        <div className="window-body">
           {step === "start" && (
             <>
               <fieldset>
