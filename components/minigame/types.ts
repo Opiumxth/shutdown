@@ -14,6 +14,7 @@ export type PuzzleData = {
   options: string[];
   correctAnswer: string[];
   deadline: number;
+  isMinor?: boolean;
 };
 
 export type PuzzleResult = {
