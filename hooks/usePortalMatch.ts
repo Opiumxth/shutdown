@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useChannel } from "@portalsdk/react";
 import { calculateDamage } from "@/lib/damage";
 import { MAX_HP } from "@/lib/constants";
@@ -23,10 +23,11 @@ import type {
 // 1v1 match is a non-issue, and the rest of the turn/damage logic is
 // unaffected either way.
 //
-// Same limitation will hit the live-cursor extra (fase-1.md) when it's
-// built: cursor position can't go over `ephemeral` sends either, since the
-// rival's client would never see it. Use `channel.setMetadata()` there
-// instead (throttled), not `send`.
+// Same limitation applies to the live-cursor extra (fase-1.md): cursor
+// position can't go over `ephemeral` sends either, since the rival's client
+// would never see it. components/cursor/InterferenceLayer.tsx already does
+// this correctly via `channel.setMetadata()` (throttled), not `send` — that
+// component owns cursor broadcast entirely; this hook does not.
 type TurnRole = "attacker" | "defender";
 
 type DefenseMessageContent = PuzzleWithId & { turnId: string };
@@ -84,7 +85,7 @@ export function usePortalMatch(matchId: string) {
       const damage = calculateDamage({
         attackerElapsedMs: turn.attackerResult.timestamp - turn.anchorTime,
         defenderElapsedMs: turn.defenderResult.timestamp - turn.anchorTime,
-        defenderResponded: true,
+        defenderResponded: turn.defenderResult.success,
       });
 
       if (turn.myRole === "attacker") {
@@ -96,7 +97,7 @@ export function usePortalMatch(matchId: string) {
     [],
   );
 
-  const { status, presence, send, setMetadata, me } = useChannel<MatchMessage>({
+  const { status, presence, send } = useChannel<MatchMessage>({
     channelId: `match:${matchId}`,
     onMessage: (msg) => {
       if (msg.type === "defense") {
@@ -118,35 +119,6 @@ export function usePortalMatch(matchId: string) {
       }
     },
   });
-
-  useEffect(() => {
-    let last = 0;
-    const sendPosition = (x: number, y: number) => {
-      const now = performance.now();
-      if (now - last < 50) return;
-      last = now;
-      setMetadata({ mouseX: x, mouseY: y });
-    };
-
-    const onMove = (e: MouseEvent) => sendPosition(e.clientX, e.clientY);
-
-    window.addEventListener("mousemove", onMove);
-    return () => window.removeEventListener("mousemove", onMove);
-  }, [setMetadata]);
-
-  const rivalMouse = (() => {
-    if (presence?.kind !== "detailed") return null;
-    const rival = presence.participants.find((p) => p.id !== me?.id);
-    const meta = rival?.metadata;
-    if (
-      !meta ||
-      typeof meta.mouseX !== "number" ||
-      typeof meta.mouseY !== "number"
-    ) {
-      return null;
-    }
-    return { x: meta.mouseX, y: meta.mouseY };
-  })();
 
   const participantCount = presence?.kind === "detailed" ? presence.count : 0;
 
@@ -229,6 +201,5 @@ export function usePortalMatch(matchId: string) {
     attack,
     resolveAttack,
     resolveDefense,
-    rivalMouse,
   };
 }
