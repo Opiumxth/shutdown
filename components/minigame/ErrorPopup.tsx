@@ -5,11 +5,18 @@ import { PuzzleGame } from "./PuzzleGame";
 import type { PuzzleData, PuzzleResult } from "./types";
 
 type ErrorPopupProps = PuzzleData & {
-  onResult: (result: PuzzleResult) => void;
+  onResult?: (result: PuzzleResult) => void;
+  decorative?: boolean;
+  defaultExpanded?: boolean;
 };
 
-export function ErrorPopup({ onResult, ...puzzle }: ErrorPopupProps) {
-  const [expanded, setExpanded] = useState(false);
+export function ErrorPopup({
+  onResult,
+  decorative = false,
+  defaultExpanded = false,
+  ...puzzle
+}: ErrorPopupProps) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [position, setPosition] = useState({ top: "10%", left: "10%" });
 
   useEffect(() => {
@@ -17,13 +24,35 @@ export function ErrorPopup({ onResult, ...puzzle }: ErrorPopupProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPosition({
       top: `${Math.random() * 70}%`,
-      left: `${Math.random() * 70}%`,
+      left: `${Math.random() * 60}%`,
     });
   }, []);
 
   function handleResult(result: PuzzleResult) {
     setExpanded(false);
-    onResult(result);
+    onResult?.(result);
+  }
+
+  if (decorative) {
+    return (
+      <div
+        className="window"
+        style={{
+          position: "absolute",
+          top: position.top,
+          left: position.left,
+          width: 220,
+          pointerEvents: "none",
+        }}
+      >
+        <div className="title-bar">
+          <div className="title-bar-text">Error del sistema</div>
+        </div>
+        <div className="window-body">
+          <p>⚠ {puzzle.title}</p>
+        </div>
+      </div>
+    );
   }
 
   if (!expanded) {
